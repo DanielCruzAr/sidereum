@@ -22,7 +22,7 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 # Install Docker and Docker Compose
 echo "Installing Docker and Docker Compose..."
 sudo apt-get update -y
-sudo apt install -y docker-ce docker-ce-cli docker-compose
+sudo apt install -y docker-ce docker-ce-cli docker-compose docker.io
 
 # Add ubuntu user to the docker group
 systemctl enable docker

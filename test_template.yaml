@@ -29,5 +29,4 @@ Resources:
           SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref SG
-      UserData:
-        Fn::Base64: !Ref UserDataScript
+      UserData: !Ref UserDataScript
