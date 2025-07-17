@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "PublicSubnet",
+    "ParameterValue": "subnet-0e05a21229831fa07"
+  },
+  {
+    "ParameterKey": "SG",
+    "ParameterValue": "sg-0e22439a06a94646f"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "sidereum-keys"
+  },
+  {
+    "ParameterKey": "IamRole",
+    "ParameterValue": "iam-role-grant-ec2-ssm-and-ecr-access"
+  }
+]

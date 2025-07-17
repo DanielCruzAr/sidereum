@@ -1,0 +1,85 @@
+Parameters:
+  ApiAmiId:
+    Type: AWS::EC2::Image::Id
+    Description: The ID of the AMI to use for this instance
+  PublicSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public Subnet ID for the Nginx Proxy
+  AppSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Application Subnet ID for the Reservations API
+  AlbSG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group for the Application Load Balancer (NGINX Proxy)
+  AppSG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group for the Reservations API
+  DataSG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security Group for the RDS Database
+  DataSubnetGroup:
+    Type: String
+    Description: RDS DB Subnet Group Name
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-020cba7c55df1f615
+
+Resources:
+  NginxProxy:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: nginx-proxy
+      InstanceType: t3.micro
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet:
+            - !Ref AlbSG
+      UserData: !Base64
+        Fn::Sub: |
+          ${UserDataScript}
+
+  ReservationsApi:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+        - Key: Name
+          Value: reservations-api
+      InstanceType: t3.micro
+      ImageId: !Ref ApiAmiId
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref AppSubnet
+          GroupSet:
+            - !Ref AppSG
+
+  PostgresDb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      AllocatedStorage: 10
+      DBName: sidereumdb
+      MasterUsername: postgres
+      MasterUserPassword: Kq87&5LNUa#?45
+      VPCSecurityGroups:
+        - !Ref DataSG
+      DBSubnetGroupName: !Ref DataSubnetGroup
+      PubliclyAccessible: false
+      MultiAZ: false
+
+  

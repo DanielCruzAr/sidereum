@@ -1,0 +1,33 @@
+Parameters:
+  PublicSubnet:
+    Type: AWS::EC2::Subnet::Id
+  SG:
+    Type: AWS::EC2::SecurityGroup::Id
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+  IamRole:
+    Type: String
+  UserDataScript:
+    Type: String
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-020cba7c55df1f615
+
+Resources:
+  ApiInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref IamRole
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet:
+            - !Ref SG
+      UserData:
+        Fn::Base64: !Ref UserDataScript

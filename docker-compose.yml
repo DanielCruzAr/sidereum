@@ -1,0 +1,44 @@
+services:
+  redis:
+    image: 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:redis
+    restart: unless-stopped
+
+  webapp:
+    image: 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:latest
+    container_name: webapp
+    command: entrypoint.sh
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - /home/ec2-user/.env
+    depends_on:
+      redis:
+        condition: service_started
+
+  celery:
+    image: 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:latest
+    restart: unless-stopped
+    container_name: celery
+    command: celery -A api worker -l INFO
+    env_file:
+      - /home/ec2-user/.env
+    depends_on:
+      webapp:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  celery-beat:
+    image: 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:latest
+    restart: unless-stopped
+    container_name: celery-beat
+    command: celery -A api beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - /home/ec2-user/.env
+    depends_on:
+      webapp:
+        condition: service_started
+      redis:
+        condition: service_started
+
