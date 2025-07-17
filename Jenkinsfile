@@ -29,16 +29,15 @@ pipeline {
 
         stage('Inject UserData into Params File') {
             steps {
-                script {
-                    def paramsJson = readFile(PARAMS_FILE)
-                    def params = new groovy.json.JsonSlurper().parseText(paramsJson)
-
-                    def updated = params.findAll { it.ParameterKey != 'UserDataScript' } +
-                        [ [ParameterKey: 'UserDataScript', ParameterValue: env.ENCODED_USERDATA ] ]
-
-                    writeFile file: 'final-params.json',
-                              text: groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(updated))
-                }
+                def raw = readFile(PARAMS_FILE)
+                def updateJson = sh(
+                    script: """
+                    jq 'map(select(.ParameterKey != "UserDataScript")) + 
+                        [{"ParameterKey": "UserDataScript", "ParameterValue": "${env.ENCODED_USERDATA}"}]' <<< '${raw}'
+                    """,
+                    returnStdout: true
+                ).trim()
+                writeFile file: 'final-params.json', text: updateJson
             }
         }
 
