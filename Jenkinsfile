@@ -28,16 +28,25 @@ pipeline {
         }
 
         stage('Inject UserData into Params File') {
-            steps {
-                def raw = readFile(PARAMS_FILE)
-                def updateJson = sh(
-                    script: """
-                    jq 'map(select(.ParameterKey != "UserDataScript")) + 
-                        [{"ParameterKey": "UserDataScript", "ParameterValue": "${env.ENCODED_USERDATA}"}]' <<< '${raw}'
-                    """,
-                    returnStdout: true
-                ).trim()
-                writeFile file: 'final-params.json', text: updateJson
+            script {
+                def rawParams = readFile(PARAMS_FILE)
+                def paramsList = new groovy.json.JsonSlurper().parseText(rawParams) as List
+
+                // Remove existing UserDataScript param if it exists
+                def filtered = paramsList.findAll { it.ParameterKey != 'UserDataScript' }
+
+                // Add updated UserDataScript param
+                filtered << [
+                    ParameterKey  : 'UserDataScript',
+                    ParameterValue: env.ENCODED_USERDATA
+                ]
+
+                // Serialize immediately to avoid LazyMap issues
+                def serialized = groovy.json.JsonOutput.prettyPrint(
+                    groovy.json.JsonOutput.toJson(filtered)
+                )
+
+                writeFile file: 'final-params.json', text: serialized
             }
         }
 
