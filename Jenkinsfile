@@ -5,8 +5,11 @@ pipeline {
         AWS_REGION = 'us-east-1'
         STACK_NAME = 'sidereum-reservations'
         TEMPLATE_FILE = 'test_template.yaml'
-        PARAMS_FILE = 'params.json'
         USERDATA_FILE = 'reservations-api.sh'
+        PUBLIC_SUBNET = 'subnet-0e05a21229831fa07'
+        SG = 'sg-0e22439a06a94646f'
+        KEY_NAME = 'sidereum-keys'
+        IAM_ROLE = 'iam-role-grant-ec2-ssm-and-ecr-access'
     }
 
     stages {
@@ -37,7 +40,7 @@ pipeline {
                             --template-file ${TEMPLATE_FILE} \
                             --stack-name ${STACK_NAME} \
                             --capabilities CAPABILITY_IAM \
-                            --parameter-overrides UserDataScript=${ENCODED_USERDATA}
+                            --parameter-overrides UserDataScript=${ENCODED_USERDATA} PublicSubnet=${PUBLIC_SUBNET} SG=${SG} KeyName=${KEY_NAME} IamRole=${IAM_ROLE}
                     """
                 }
             }
