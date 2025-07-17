@@ -44,14 +44,13 @@ pipeline {
 
         stage ('Deploy CloudFormation Stack') {
             steps {
-                script {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS']]) {
                     sh """
                         aws cloudformation deploy \
                             --template-file ${TEMPLATE_FILE} \
                             --stack-name ${STACK_NAME} \
-                            --parameter-overrides file://${PARAMS_FILE} \
-                            --capabilities CAPABILITY_IAM \
-                            --region ${AWS_REGION}
+                            --parameter-overrides file://final-params.json \
+                            --capabilities CAPABILITY_IAM
                     """
                 }
             }
