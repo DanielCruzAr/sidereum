@@ -44,7 +44,7 @@ pipeline {
 
         stage ('Deploy CloudFormation Stack') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS']]) {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
                     sh """
                         aws cloudformation deploy \
                             --template-file ${TEMPLATE_FILE} \
