@@ -41,7 +41,7 @@ pipeline {
             }
         }
 
-        stage ('Get Instance Public IP') {
+        stage ('Get Instance ID') {
             steps {
                 withAWS(credentials: 'AWS', region: env.AWS_REGION) {
                     script {
@@ -49,14 +49,36 @@ pipeline {
                             script: "aws ec2 describe-instances --filters 'Name=tag:${EC2_TAG_KEY},Values=${EC2_TAG_VALUE}' --query 'Reservations[0].Instances[0].InstanceId' --output text",
                             returnStdout: true
                         ).trim()
+                        env.INSTANCE_ID = instanceId
+                    }
+                }
+            }
+        }
+
+        stage('Wait for EC2 to Pass Status Checks') {
+            steps {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                    script {
+                        echo "Waiting for instance ${env.INSTANCE_ID} to pass status checks..."
+                        sh """
+                        aws ec2 wait instance-status-ok --instance-ids ${env.INSTANCE_ID}
+                        """
+                        echo "Instance is now healthy and ready."
+                    }
+                }
+            }
+        }
+
+        stage ('Get Instance Public IP') {
+            steps {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                    script {
                         def publicIp = sh(
-                            script: "aws ec2 describe-instances --instance-ids ${instanceId} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text",
+                            script: "aws ec2 describe-instances --instance-ids ${env.INSTANCE_ID} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text",
                             returnStdout: true
                         ).trim()
-                        
-                        echo "Instance ID: ${instanceId}"
-                        echo "Public IP: ${publicIp}"
                         env.INSTANCE_PUBLIC_IP = publicIp
+                        echo "Instance Public IP: ${env.INSTANCE_PUBLIC_IP}"
                     }
                 }
             }
