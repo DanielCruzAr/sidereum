@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 echo "Starting script..."
 
-sudo apt-get update -y
+apt-get update -y
 
 # Install necessary packages
 echo "Installing necessary packages..."
-sudo apt install -y \
+apt install -y \
     apt-transport-https \
     ca-certificates \
     curl software-properties-common \
@@ -16,18 +17,18 @@ sudo apt install -y \
 
 # Add the Docker GPG key and repository
 echo "Adding Docker GPG key and repository..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg |  apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 
 # Install Docker and Docker Compose
 echo "Installing Docker and Docker Compose..."
-sudo apt-get update -y
-sudo apt install -y docker-ce docker-ce-cli docker-compose docker.io
+apt-get update -y
+apt install -y docker-ce docker-ce-cli docker-compose docker.io
 
 # Add ubuntu user to the docker group
 systemctl enable docker
 systemctl start docker
-sudo usermod -aG docker ubuntu
+usermod -aG docker ubuntu
 
 # Login to ECR
 echo "Logging in to ECR..."

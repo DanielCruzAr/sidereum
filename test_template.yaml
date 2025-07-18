@@ -7,7 +7,9 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   IamRole:
     Type: String
-  UserDataScript:
+  EC2_TAG_KEY:
+    Type: String
+  EC2_TAG_VALUE:
     Type: String
 
 Mappings:
@@ -23,10 +25,12 @@ Resources:
       InstanceType: t2.micro
       KeyName: !Ref KeyName
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      Tags:
+        - Key: !Ref EC2_TAG_KEY
+          Value: !Ref EC2_TAG_VALUE
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
           SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref SG
-      UserData: !Ref UserDataScript

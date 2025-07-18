@@ -5,30 +5,15 @@ pipeline {
         AWS_REGION = 'us-east-1'
         STACK_NAME = 'sidereum-reservations'
         TEMPLATE_FILE = 'test_template.yaml'
-        USERDATA_FILE = 'reservations-api.sh'
-        PUBLIC_SUBNET = 'subnet-0e05a21229831fa07'
-        SG = 'sg-0e22439a06a94646f'
-        KEY_NAME = 'sidereum-keys'
-        IAM_ROLE = 'iam-role-grant-ec2-ssm-and-ecr-access'
+        PARAMS_FILE = 'params.json'
+        EC2_TAG_KEY = 'instance'
+        EC2_TAG_VALUE = 'api-instance'
     }
 
     stages {
         stage('Verify AWS CLI') {
             steps {
                 sh 'aws --version'
-            }
-        }
-
-        stage ('Read and Encode User Data') {
-            steps {
-                script {
-                    def userData = sh(
-                        script: "base64 -w 0 ${USERDATA_FILE}",
-                        returnStdout: true
-                    ).trim()
-
-                    env.ENCODED_USERDATA = userData
-                }
             }
         }
 
@@ -40,7 +25,53 @@ pipeline {
                             --template-file ${TEMPLATE_FILE} \
                             --stack-name ${STACK_NAME} \
                             --capabilities CAPABILITY_IAM \
-                            --parameter-overrides UserDataScript=${ENCODED_USERDATA} PublicSubnet=${PUBLIC_SUBNET} SG=${SG} KeyName=${KEY_NAME} IamRole=${IAM_ROLE}
+                            --parameter-overrides file://${PARAMS_FILE}
+                    """
+                }
+            }
+        }
+
+        stage ('Wait for Stack Completion') {
+            steps {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                    sh """
+                        aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME}
+                    """
+                }
+            }
+        }
+
+        stage ('Get Instance Public IP') {
+            steps {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                    script {
+                        def instanceId = sh(
+                            script: "aws ec2 describe-instances --filters 'Name=tag:${EC2_TAG_KEY},Values=${EC2_TAG_VALUE}' --query 'Reservations[0].Instances[0].InstanceId' --output text"
+                        )
+                        def publicIp = sh(
+                            script: "aws ec2 describe-instances --instance-ids ${instanceId} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text"
+                        ).trim()
+                        env.INSTANCE_PUBLIC_IP = publicIp
+                    }
+                }
+            }
+        }
+
+        stage ('Connect to EC2 Instance') {
+            steps {
+                sshagent(credentials: ['aws-ssh-key-pair']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@${env.INSTANCE_PUBLIC_IP} << EOF
+                            echo "Connected to EC2 Instance"
+                            sudo apt-get update
+                            sudo apt-get install -y docker.io
+                            sudo systemctl start docker
+                            sudo systemctl enable docker
+                            sudo usermod -aG docker ubuntu
+                            docker --version
+                            echo "Docker installed and started"
+                            exit
+                        EOF
                     """
                 }
             }
