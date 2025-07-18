@@ -47,7 +47,7 @@ pipeline {
                     script {
                         def instanceId = sh(
                             script: "aws ec2 describe-instances --filters 'Name=tag:${EC2_TAG_KEY},Values=${EC2_TAG_VALUE}' --query 'Reservations[0].Instances[0].InstanceId' --output text"
-                        )
+                        ).trim()
                         def publicIp = sh(
                             script: "aws ec2 describe-instances --instance-ids ${instanceId} --query 'Reservations[0].Instances[0].PublicIpAddress' --output text"
                         ).trim()
