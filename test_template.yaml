@@ -25,7 +25,6 @@ Resources:
       InstanceType: t2.micro
       KeyName: !Ref KeyName
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
-      AssociatePublicIpAddress: true
       Tags:
         - Key: !Ref EC2TagKey
           Value: !Ref EC2TagValue
