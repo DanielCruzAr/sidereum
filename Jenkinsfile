@@ -70,6 +70,10 @@ pipeline {
                             sudo usermod -aG docker ubuntu
                             docker --version
                             echo "Docker installed and started"
+                            echo "Logging into ECR"
+                            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 912262731597.dkr.ecr.us-east-1.amazonaws.com
+                            docker pull 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:latest
+                            docker pull 912262731597.dkr.ecr.us-east-1.amazonaws.com/sidereum:redis
                             exit
                         EOF
                     """
