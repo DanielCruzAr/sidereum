@@ -16,11 +16,11 @@
     "ParameterValue": "iam-role-grant-ec2-ssm-and-ecr-access"
   },
   {
-    "ParameterKey": "EC2_TAG_KEY",
+    "ParameterKey": "EC2TagKey",
     "ParameterValue": "instance"
   },
   {
-    "ParameterKey": "EC2_TAG_VALUE",
+    "ParameterKey": "EC2TagValue",
     "ParameterValue": "api-instance"
   }
 ]

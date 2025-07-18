@@ -7,9 +7,9 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
   IamRole:
     Type: String
-  EC2_TAG_KEY:
+  EC2TagKey:
     Type: String
-  EC2_TAG_VALUE:
+  EC2TagValue:
     Type: String
 
 Mappings:
@@ -26,8 +26,8 @@ Resources:
       KeyName: !Ref KeyName
       ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
       Tags:
-        - Key: !Ref EC2_TAG_KEY
-          Value: !Ref EC2_TAG_VALUE
+        - Key: !Ref EC2TagKey
+          Value: !Ref EC2TagValue
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
