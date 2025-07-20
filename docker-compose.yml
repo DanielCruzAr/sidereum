@@ -11,7 +11,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - /home/ec2-user/.env
+      - /home/ubuntu/.env
     depends_on:
       redis:
         condition: service_started
@@ -22,7 +22,7 @@ services:
     container_name: celery
     command: celery -A api worker -l INFO
     env_file:
-      - /home/ec2-user/.env
+      - /home/ubuntu/.env
     depends_on:
       webapp:
         condition: service_started
@@ -35,7 +35,7 @@ services:
     container_name: celery-beat
     command: celery -A api beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file:
-      - /home/ec2-user/.env
+      - /home/ubuntu/.env
     depends_on:
       webapp:
         condition: service_started
