@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1'
+        STACK_NAME = 'sidereum-reservations'
+        TEMPLATE_FILE = 'template.yaml'
+    }
+
+    stages {
+        stage('Verify AWS CLI') {
+            steps {
+                sh 'aws --version'
+            }
+        }
+
+        stage ('Deploy CloudFormation Stack') {
+            steps {
+                configFileProvider([configFile(fileId: 'sdparamsfile', variable: 'PARAMS_FILE')]) {
+                    withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                        sh """
+                            aws cloudformation deploy \
+                                --template-file ${TEMPLATE_FILE} \
+                                --stack-name ${STACK_NAME} \
+                                --capabilities CAPABILITY_IAM \
+                                --parameter-overrides file://${PARAMS_FILE}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage ('Wait for Stack Completion') {
+            steps {
+                withAWS(credentials: 'AWS', region: env.AWS_REGION) {
+                    sh """
+                        aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME}
+                    """
+                }
+            }
+        }
+    }
+}

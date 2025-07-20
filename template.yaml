@@ -66,9 +66,26 @@ Resources:
           SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref AlbSG
-      # UserData: !Base64
-      #   Fn::Sub: |
-      #     ${UserDataScript}
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          set -e
+
+          # Update and install NGINX
+          apt-get update -y
+          apt-get install -y nginx
+
+          # Start and enable NGINX
+          systemctl start nginx
+          systemctl enable nginx
+
+          # Install Certbot (Snap recommended by Certbot)
+          apt-get install -y snapd
+          snap install core && snap refresh core
+          snap install --classic certbot
+
+          # Create symlink for Certbot
+          ln -s /snap/bin/certbot /usr/bin/certbot
 
   ReservationsApi:
     Type: AWS::EC2::Instance
