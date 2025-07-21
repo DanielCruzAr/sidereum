@@ -38,6 +38,12 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Password for the database user
+  IamRoleProxy:
+    Type: String
+    Description: IAM Role for the EC2 instance to allow access to other AWS services
+  IamRoleApi:
+    Type: String
+    Description: IAM Role for the Reservations API EC2 instance
 
 Mappings:
   RegionMap:
@@ -57,6 +63,7 @@ Resources:
         - !Ref AWS::Region
         - AMI
       KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref IamRoleProxy
       Tags:
         - Key: !Ref EC2TagKey
           Value: !Ref EC2TagValue1
@@ -95,6 +102,7 @@ Resources:
           Value: !Ref EC2TagValue2
       InstanceType: t2.micro
       ImageId: !Ref ApiAmiId
+      IamInstanceProfile: !Ref IamRoleApi
       KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
